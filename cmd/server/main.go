@@ -31,8 +31,10 @@ type Stats struct {
 	Count    int    `json:count`
 }
 
-var m = make(map[string]uint)
-var mu sync.Mutex
+var (
+	m  = make(map[string]uint)
+	mu sync.Mutex
+)
 
 func check(
 	ctx context.Context,
@@ -142,11 +144,12 @@ func handleStats(w http.ResponseWriter, req *http.Request, _ httprouter.Params) 
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	mu.Lock()
+	defer mu.Unlock()
 	if err := enc.Encode(m); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "Internal server error")
+		return
 	}
-	mu.Unlock()
 }
 
 func main() {
